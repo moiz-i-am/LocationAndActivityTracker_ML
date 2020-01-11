@@ -1,26 +1,41 @@
 package com.example.locationtracker;
 
+import android.Manifest;
+import android.app.Activity;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.location.Address;
+import android.location.Geocoder;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.os.Build;
+import android.os.Bundle;
 import android.os.Environment;
 import android.os.IBinder;
 import android.provider.Settings;
 import android.util.Log;
 
+import androidx.annotation.NonNull;
+import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
+import androidx.core.content.ContextCompat;
 
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
+import java.io.IOException;
+import java.util.List;
+import java.util.Locale;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -36,6 +51,7 @@ public class MyService extends Service implements SensorEventListener {
     StringBuilder stringBuilder;
     BufferedWriter bufferedWriter;
     float[] accData, megData, gyrData;
+    String loc;
     SensorManager sensorManager;
     Sensor megSensor, accSensor, gyrSensor;
     String message, storageState;
@@ -44,6 +60,9 @@ public class MyService extends Service implements SensorEventListener {
     NotificationManager notificationManager;
     FileWriter fileWriter;
     String deviceId;
+
+    LocationManager locationManager;
+    LocationListener locationListener;
 
     public MyService() {
     }
@@ -65,6 +84,64 @@ public class MyService extends Service implements SensorEventListener {
             startInForeground();
         }
 
+
+        // gps start
+
+        locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
+        boolean isGPS_enable = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
+
+        if(isGPS_enable){
+            locationListener = new LocationListener() {
+                @Override
+                public void onLocationChanged(Location location) {
+
+                    double longitude = location.getLongitude();
+                    double latitude = location.getLatitude();
+
+                    try{
+
+                        Geocoder geocoder = new Geocoder(context, Locale.getDefault());
+                        List<Address> addressList = geocoder.getFromLocation(latitude,longitude,1);
+
+                        loc = addressList.get(0).getAddressLine(0);
+
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+
+                }
+
+                @Override
+                public void onStatusChanged(String provider, int status, Bundle extras) {
+
+                }
+
+                @Override
+                public void onProviderEnabled(String provider) {
+
+                }
+
+                @Override
+                public void onProviderDisabled(String provider) {
+
+                }
+            };
+        }
+
+        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                && ActivityCompat.checkSelfPermission(context,Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED){
+
+            ActivityCompat.requestPermissions((Activity) context, new String[] {Manifest.permission.ACCESS_FINE_LOCATION},1);
+
+        }else{
+            locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,0,0,locationListener);
+        }
+
+        // gps end
+
+
+
+
             stringBuilder = new StringBuilder();
         this.sensorManager = ((SensorManager) getSystemService(SENSOR_SERVICE));
         accSensor = sensorManager.getDefaultSensor(1);
@@ -76,7 +153,7 @@ public class MyService extends Service implements SensorEventListener {
             public void run() {
                 stringBuilder.setLength(0);
                 try {
-                    bufferedWriter.write(System.currentTimeMillis() + ";" + accData[0] + ";" + accData[1] + ";" + accData[2] + ";" + gyrData[0] + ";" + gyrData[1] + ";" + gyrData[2] + ";" + megData[0] + ";" + megData[1] + ";" + megData[2] + ";" + "\n");
+                    bufferedWriter.write(System.currentTimeMillis() + ";" + accData[0] + ";" + accData[1] + ";" + accData[2] + ";" + gyrData[0] + ";" + gyrData[1] + ";" + gyrData[2] + ";" + megData[0] + ";" + megData[1] + ";" + megData[2] + ";" +  loc.toString() + ";" + "\n");
                     return;
                 } catch (Exception localException) {
                     localException.printStackTrace();
@@ -182,5 +259,7 @@ public class MyService extends Service implements SensorEventListener {
 
         startForeground(1, notification);
     }
+
+
 
 }

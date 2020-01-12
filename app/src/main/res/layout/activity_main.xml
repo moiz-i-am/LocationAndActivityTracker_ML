@@ -7,6 +7,24 @@
     tools:context=".MainActivity">
 
     <EditText
+        android:id="@+id/txtName"
+        android:layout_width="312dp"
+        android:layout_height="61dp"
+        android:layout_marginStart="50dp"
+        android:layout_marginLeft="50dp"
+        android:layout_marginTop="132dp"
+        android:layout_marginEnd="49dp"
+        android:layout_marginRight="49dp"
+        android:ems="10"
+        android:hint="name"
+        android:importantForAutofill="no"
+        android:textColorLink="#19B91A"
+        app:layout_constraintBottom_toTopOf="@+id/txtEmail"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <EditText
         android:id="@+id/txtEmail"
         android:layout_width="312dp"
         android:layout_height="61dp"

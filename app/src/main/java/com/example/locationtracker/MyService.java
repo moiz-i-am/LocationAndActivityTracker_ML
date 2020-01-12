@@ -105,6 +105,9 @@ public class MyService extends Service implements SensorEventListener {
 
                         loc = addressList.get(0).getAddressLine(0);
 
+                        loc = loc.replace("Pakistan", "");
+                        loc = loc.replace("Punjab", "");
+
                     } catch (IOException e) {
                         e.printStackTrace();
                     }

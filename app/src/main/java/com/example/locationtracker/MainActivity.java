@@ -16,13 +16,24 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthException;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+
+
+import java.util.HashMap;
 
 public class MainActivity extends AppCompatActivity {
 
-    EditText emailId, password;
+    EditText emailId, password, name;
     Button btnSignUp;
     TextView tvSignIn;
     FirebaseAuth mFirebaseAuth;
+
+    private DatabaseReference mDatabase;
+
+    private FirebaseAuth mAuth;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,14 +43,16 @@ public class MainActivity extends AppCompatActivity {
         mFirebaseAuth = FirebaseAuth.getInstance();
         emailId = findViewById(R.id.txtEmail);
         password = findViewById(R.id.txtPassword);
+        name = findViewById(R.id.txtName);
         btnSignUp = findViewById(R.id.btnSignup);
         tvSignIn = findViewById(R.id.textViewSignin);
 
         btnSignUp.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String email = emailId.getText().toString();
+                final String email = emailId.getText().toString();
                 String pwd = password.getText().toString();
+                final String nam = name.getText().toString();
                 if(email.isEmpty()){
                     emailId.setError("please enter email");
                     emailId.requestFocus();
@@ -59,6 +72,23 @@ public class MainActivity extends AppCompatActivity {
                                 Toast.makeText(MainActivity.this,"Signup unsuccessful, please try again",Toast.LENGTH_SHORT).show();
                             }
                             else {
+
+
+                                FirebaseUser current_user = FirebaseAuth.getInstance().getCurrentUser();
+                                String uid = current_user.getUid();
+
+                                mDatabase = FirebaseDatabase.getInstance().getReference().child("Users").child(uid);
+
+
+
+                                HashMap<String,String> userMap = new HashMap<>();
+                                userMap.put("name",nam);
+                                userMap.put("email",email);
+                                userMap.put("activity","hello, this is new activity");
+
+                                mDatabase.setValue(userMap);
+
+
                                 startActivity(new Intent(MainActivity.this,HomeActivity.class));
                             }
                         }

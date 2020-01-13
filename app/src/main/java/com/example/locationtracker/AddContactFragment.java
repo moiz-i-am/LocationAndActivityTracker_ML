@@ -1,5 +1,6 @@
 package com.example.locationtracker;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -17,6 +18,7 @@ import com.firebase.ui.database.FirebaseRecyclerOptions;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
+import java.time.Instant;
 
 
 public class AddContactFragment extends Fragment {
@@ -57,10 +59,23 @@ public class AddContactFragment extends Fragment {
 
         FirebaseRecyclerAdapter<Users,FindFriendsViewHolder> adapter = new FirebaseRecyclerAdapter<Users, FindFriendsViewHolder>(options) {
             @Override
-            protected void onBindViewHolder(@NonNull FindFriendsViewHolder holder, int position, @NonNull Users model) {
+            protected void onBindViewHolder(@NonNull FindFriendsViewHolder holder, final int position, @NonNull Users model) {
                 holder.userName.setText(model.getName());
                 holder.userEmail.setText(model.getEmail());
                 holder.userActivity.setText(model.getActivity());
+
+                // for click view of specific users in users list
+                holder.itemView.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        String visit_user_id = getRef(position).getKey();
+
+                        Intent profileIntent = new Intent(getContext(),ProfileActivity.class);
+                        profileIntent.putExtra("visit_user_id",visit_user_id);
+                        startActivity(profileIntent);
+                    }
+                });
+
             }
 
             @NonNull

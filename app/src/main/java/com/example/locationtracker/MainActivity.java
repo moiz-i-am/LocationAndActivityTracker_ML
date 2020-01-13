@@ -103,7 +103,7 @@ public class MainActivity extends AppCompatActivity {
         tvSignIn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent myIntent = new Intent(MainActivity.this, HomeActivity.class);
+                Intent myIntent = new Intent(MainActivity.this, LoginActivity.class);
                 startActivity(myIntent);
             }
         });

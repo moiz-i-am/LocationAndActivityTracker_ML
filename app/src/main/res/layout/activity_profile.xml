@@ -52,7 +52,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@+id/visit_profile_email"
-        android:layout_marginTop="100dp"
+        android:layout_marginTop="30dp"
         android:layout_marginLeft="64dp"
         android:layout_marginRight="64dp"
         android:textColor="@android:color/background_light"
@@ -62,6 +62,22 @@
         android:textAllCaps="false"
         />
 
+
+    <Button
+        android:id="@+id/decline_request_button"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/send_request_button"
+        android:layout_marginTop="6dp"
+        android:layout_marginLeft="64dp"
+        android:layout_marginRight="64dp"
+        android:textColor="@android:color/background_light"
+        android:textStyle="bold"
+        android:textSize="20sp"
+        android:text="Decline Request"
+        android:textAllCaps="false"
+        android:visibility="invisible"
+        />
 
 
 </RelativeLayout>

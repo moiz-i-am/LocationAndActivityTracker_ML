@@ -96,6 +96,13 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                 getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container,
                         new RecordFragment()).commit();
                 break;
+            case R.id.nav_logout:
+//                getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container,
+//                        new RecordFragment()).commit();
+                FirebaseAuth.getInstance().signOut();
+                Intent i = new Intent(HomeActivity.this,LoginActivity.class);
+                startActivity(i);
+                break;
         }
         drawer.closeDrawer(GravityCompat.START);
         return true;

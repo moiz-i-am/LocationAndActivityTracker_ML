@@ -22,9 +22,9 @@ public class ProfileActivity extends AppCompatActivity {
 
     private String recieverUserID, Current_State, senderUserID;
     private TextView userProfileName, userProfileEmail;
-    private Button sendRequestButton;
+    private Button sendRequestButton, declineRequestButton;
 
-    private DatabaseReference UserRef, RequestRef;
+    private DatabaseReference UserRef, RequestRef, ContactsRef;
 
     private FirebaseAuth mAuth;
 
@@ -38,6 +38,7 @@ public class ProfileActivity extends AppCompatActivity {
 
         UserRef = FirebaseDatabase.getInstance().getReference().child("Users");
         RequestRef = FirebaseDatabase.getInstance().getReference().child("Requests");
+        ContactsRef = FirebaseDatabase.getInstance().getReference().child("Contacts");
 
         recieverUserID = getIntent().getExtras().get("visit_user_id").toString();
         senderUserID = mAuth.getCurrentUser().getUid();
@@ -45,6 +46,7 @@ public class ProfileActivity extends AppCompatActivity {
         userProfileName = (TextView) findViewById(R.id.visit_profile_name);
         userProfileEmail = (TextView) findViewById(R.id.visit_profile_email);
         sendRequestButton = (Button) findViewById(R.id.send_request_button);
+        declineRequestButton = (Button) findViewById(R.id.decline_request_button);
 
         Current_State = "new";
 
@@ -90,7 +92,35 @@ public class ProfileActivity extends AppCompatActivity {
                                 Current_State = "request_sent";
                                 sendRequestButton.setText("Cancel Request");
                             }
+                            else if(request_type.equals("received")){
+                                Current_State = "request_received";
+                                sendRequestButton.setText("Accept Request");
 
+                                declineRequestButton.setVisibility(View.VISIBLE);
+                                declineRequestButton.setEnabled(true);
+                                declineRequestButton.setOnClickListener(new View.OnClickListener() {
+                                    @Override
+                                    public void onClick(View v) {
+                                        CancelRequest();
+                                    }
+                                });
+                            }
+                        }else{
+                            ContactsRef.child(senderUserID)
+                                    .addListenerForSingleValueEvent(new ValueEventListener() {
+                                        @Override
+                                        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                                            if(dataSnapshot.hasChild(recieverUserID)){
+                                                Current_State = "friends";
+                                                sendRequestButton.setText("Remove this Contact");
+                                            }
+                                        }
+
+                                        @Override
+                                        public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                                        }
+                                    });
                         }
                     }
 
@@ -109,6 +139,15 @@ public class ProfileActivity extends AppCompatActivity {
                     if(Current_State.equals("new")){
                         SendRequest();
                     }
+                    if(Current_State.equals("request_sent")){
+                        CancelRequest();
+                    }
+                    if(Current_State.equals("request_received")){
+                        AcceptRequest();
+                    }
+                    if(Current_State.equals("friends")){
+                        RemoveSpecificContact();
+                    }
                 }
             });
 
@@ -116,6 +155,81 @@ public class ProfileActivity extends AppCompatActivity {
             sendRequestButton.setVisibility(View.INVISIBLE);
         }
     }
+
+    private void RemoveSpecificContact() {
+
+        ContactsRef.child(senderUserID).child(recieverUserID)
+                .removeValue()
+                .addOnCompleteListener(new OnCompleteListener<Void>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task) {
+                        if(task.isSuccessful()){
+                            ContactsRef.child(recieverUserID).child(senderUserID)
+                                    .removeValue()
+                                    .addOnCompleteListener(new OnCompleteListener<Void>() {
+                                        @Override
+                                        public void onComplete(@NonNull Task<Void> task) {
+                                            if(task.isSuccessful()){
+                                                sendRequestButton.setEnabled(true);
+                                                Current_State = "new";
+                                                sendRequestButton.setText("Send Request");
+
+
+                                                declineRequestButton.setVisibility(View.INVISIBLE);
+                                                declineRequestButton.setEnabled(false);
+
+                                            }
+                                        }
+                                    });
+                        }
+                    }
+                });
+
+    }
+
+    private void AcceptRequest() {
+        ContactsRef.child(senderUserID).child(recieverUserID)
+                .child("Contacts").setValue("Saved")
+                .addOnCompleteListener(new OnCompleteListener<Void>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task) {
+                        if(task.isSuccessful()){
+                            ContactsRef.child(recieverUserID).child(senderUserID)
+                                    .child("Contacts").setValue("Saved")
+                                    .addOnCompleteListener(new OnCompleteListener<Void>() {
+                                        @Override
+                                        public void onComplete(@NonNull Task<Void> task) {
+                                            if(task.isSuccessful()){
+                                                RequestRef.child(senderUserID).child(recieverUserID)
+                                                        .removeValue()
+                                                        .addOnCompleteListener(new OnCompleteListener<Void>() {
+                                                            @Override
+                                                            public void onComplete(@NonNull Task<Void> task) {
+                                                                if(task.isSuccessful()){
+                                                                    RequestRef.child(recieverUserID).child(senderUserID)
+                                                                            .removeValue()
+                                                                            .addOnCompleteListener(new OnCompleteListener<Void>() {
+                                                                                @Override
+                                                                                public void onComplete(@NonNull Task<Void> task) {
+                                                                                    sendRequestButton.setEnabled(true);
+                                                                                    Current_State = "friends";
+                                                                                    sendRequestButton.setText("Remove this contact");
+
+                                                                                    declineRequestButton.setVisibility(View.INVISIBLE);
+                                                                                    declineRequestButton.setEnabled(false);
+                                                                                }
+                                                                            });
+                                                                }
+                                                            }
+                                                        });
+                                            }
+                                        }
+                                    });
+                        }
+                    }
+                });
+    }
+
 
     private void SendRequest() {
         RequestRef.child(senderUserID).child(recieverUserID)
@@ -140,4 +254,36 @@ public class ProfileActivity extends AppCompatActivity {
                     }
                 });
     }
+
+    private void CancelRequest() {
+
+        RequestRef.child(senderUserID).child(recieverUserID)
+                .removeValue()
+                .addOnCompleteListener(new OnCompleteListener<Void>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task) {
+                        if(task.isSuccessful()){
+                            RequestRef.child(recieverUserID).child(senderUserID)
+                                    .removeValue()
+                                    .addOnCompleteListener(new OnCompleteListener<Void>() {
+                                        @Override
+                                        public void onComplete(@NonNull Task<Void> task) {
+                                            if(task.isSuccessful()){
+                                                sendRequestButton.setEnabled(true);
+                                                Current_State = "new";
+                                                sendRequestButton.setText("Send Request");
+
+
+                                                declineRequestButton.setVisibility(View.INVISIBLE);
+                                                declineRequestButton.setEnabled(false);
+
+                                            }
+                                        }
+                                    });
+                        }
+                    }
+                });
+
+    }
+
 }
